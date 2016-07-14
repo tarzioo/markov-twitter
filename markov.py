@@ -45,7 +45,10 @@ def make_text(chains):
 
     key = choice(chains.keys())
     words = [key[0], key[1]]
-    while key in chains:
+    random_text = ""
+    word = ""
+
+    while key in chains and (len(word) + len(random_text)) < 140:
         # Keep looping until we have a key that isn't in the chains
         # (which would mean it was the end of our original text)
         #
@@ -55,15 +58,24 @@ def make_text(chains):
         word = choice(chains[key])
         words.append(word)
         key = (key[1], word)
+        random_text = " ".join(words)
+    return random_text
 
-    return " ".join(words)
 
-
-def tweet(chains):
+def tweet(random_text):
     # Use Python os.environ to get at environmental variables
     # Note: you must run `source secrets.sh` before running this file
     # to make sure these environmental variables are set.
-    pass
+    api = twitter.Api(
+        consumer_key=os.environ['TWITTER_CONSUMER_KEY'],
+        consumer_secret=os.environ['TWITTER_CONSUMER_SECRET'],
+        access_token_key=os.environ['TWITTER_ACCESS_TOKEN_KEY'],
+        access_token_secret=os.environ['TWITTER_ACCESS_TOKEN_SECRET'])
+
+    print api.VerifyCredentials()
+
+    status = api.PostUpdate(random_text)
+    print status.text
 
 # Get the filenames from the user through a command line prompt, ex:
 # python markov.py green-eggs.txt shakespeare.txt
@@ -74,6 +86,11 @@ text = open_and_read_file(filenames)
 
 # Get a Markov chain
 chains = make_chains(text)
+
+random_text = make_text(chains)
+
+tweet(random_text)
+
 
 # Your task is to write a new function tweet, that will take chains as input
 # tweet(chains)
